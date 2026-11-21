@@ -41,7 +41,8 @@ O objetivo deste projeto **não é construir um sistema completo em produção**
 
 ## Ferramentas e Ambiente Utilizados
 
-* **Execução dos Prompts Protótipos:** Interface Web Gemini (Google Workspace), modelo **Neon Alto**, parâmetros padrão de inferência.
+* **Execução dos Prompts Protótipos:** Interface Web Gemini (Google Workspace), modelo **Neon (nível de raciocínio: Alto)**, parâmetros padrão de inferência.
+  * *Nota de reprodutibilidade:* "Neon" (com nível de raciocínio "Alto") é o identificador exibido no seletor oficial da interface web do Gemini a partir de novembro de 2026. Em contas que exibam outra nomenclatura de seletor, os testes podem ser reproduzidos com o modelo de raciocínio equivalente vigente.
 * **Protocolo de Isolamento:** Cada caso de teste é executado em um **chat novo e completamente limpo**, garantindo ausência de contaminação de contexto entre execuções.
 * **Versionamento e Edição:** Visual Studio Code, Git e GitHub.
 * **Uso de IA no Desenvolvimento:** Documentado com transparência na Seção 10 do [MEMORANDO_TECNICO.md](./MEMORANDO_TECNICO.md).
@@ -53,7 +54,7 @@ O objetivo deste projeto **não é construir um sistema completo em produção**
 1. Abra o molde do prompt em `prompts/prompt_v1_baseline.md`.
 2. Substitua o placeholder `{{BASE_NORMATIVA}}` pelo conteúdo integral de `docs/base_normativa_ficticia.md`.
 3. Escolha um caso de teste em `data/mensagens_ficticias.json` (`MSG-01`, `MSG-02` ou `MSG-03`) e preencha `{{ASSUNTO}}`, `{{ANEXOS_RESUMO}}` e `{{CORPO_SANITIZADO}}` utilizando **apenas** os campos das chaves `etapa_1_ingestao` e `etapa_2_sanitizacao` (nunca envie o bloco `gabarito_p1`).
-4. Abra um **novo chat limpo** na interface do modelo (**Neon Alto**), cole o prompt preenchido e execute.
+4. Abra um **novo chat limpo** na interface web do Gemini selecionando **Neon (nível de raciocínio: Alto)** (ou modelo de raciocínio equivalente disponível), cole o prompt preenchido e execute.
 5. Compare a saída obtida com a Base Normativa Oficial e com os registros salvos em `resultados/testes_basico_v1.md`.
 
 ---

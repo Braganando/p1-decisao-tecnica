@@ -1,12 +1,14 @@
 # Registro de Testes — Nível Básico (Prompt V1 Baseline)
 
 ## Configuração do Experimento
-* **Data de execução:** 20/11/2026
-* **Modelo utilizado:** Neon Alto
+* **Data de execução:** 21/11/2026
+* **Modelo utilizado:** Gemini — modelo **Neon** (nível de raciocínio: **Alto**)
 * **Ambiente:** Interface Web Gemini (Google Workspace) — chat isolado por caso
-* **Parâmetros:** Padrão da interface web
+* **Parâmetros:** Padrão da interface web (com seletor de raciocínio em *Alto*)
 * **Prompt utilizado:** `prompts/prompt_v1_baseline.md`
 * **Base normativa:** `docs/base_normativa_ficticia.md`
+
+> **Nota de reprodutibilidade:** *Neon* (com nível de raciocínio *Alto*) é a nomenclatura exibida no seletor oficial da interface web do Gemini (Google Workspace) a partir de novembro de 2026. Caso o avaliador acesse uma conta com nomenclatura distinta no seletor, os testes podem ser reproduzidos com o modelo de raciocínio equivalente vigente, registrando o rótulo exibido.
 
 ---
 
@@ -40,8 +42,8 @@
 > Secretaria Acadêmica
 
 ### Avaliação inicial
-* **Status:** Adequado
-* **Observações:** Fidelidade integral à Seção 2.1 (canal, documentos obrigatórios, prazo de 15 dias corridos e análise em 15 dias úteis). Boa contenção de alucinação ao não inventar data de início do próximo semestre e preservação correta do token `[NOME_ALUNO_01]`. Ponto de atenção técnico: há uma zona cinzenta de roteamento entre `SECRETARIA_ACADEMICA` (dúvidas gerais) e `COORDENACAO_CURSO` (aproveitamento); o modelo escolheu a primeira e registrou a segunda nos pontos de atenção — bom insumo para refinar regras de roteamento no Nível Intermediário.
+* **Status:** Parcial (adequado no conteúdo factual; falha de governança no acionamento humano)
+* **Observações:** Fidelidade integral à Seção 2.1 (canal, documentos obrigatórios, prazo de 15 dias corridos e análise em 15 dias úteis), boa contenção de alucinação ao não inventar data de início do próximo semestre e preservação correta do token `[NOME_ALUNO_01]`. **Ressalva crítica de governança:** o modelo assinalou `Necessita revisão humana: Não` por se tratar de caso padrão da base. Embora a redação do Prompt V1 tenha induzido essa escolha binária (`[Sim / Não]`), na arquitetura de copiloto adotada pela instituição essa classificação representa um **falso negativo de revisão humana** (risco de desintermediação indevida), servindo de evidência empírica para calibrar as regras de acionamento humano e de Zona Operacional na versão V2. Também se manteve a ambiguidade de roteamento entre `SECRETARIA_ACADEMICA` e `COORDENACAO_CURSO`.
 
 ---
 

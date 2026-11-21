@@ -92,13 +92,14 @@ Modelos de Linguagem de Grande Porte não "compreendem" regras institucionais ne
 * **Arquivo no repositório:** `prompts/prompt_v1_baseline.md`
 * **Funcionalidade-alvo:** F1 (Triagem semântica e geração de rascunho para dúvidas gerais)
 * **Técnica:** *Zero-shot* estruturado nos 4 pilares obrigatórios (*Contexto*, *Tarefa*, *Instruções/Restrições* e *Formato Esperado*), sem exemplos *few-shot* e sem schema JSON estrito.
-* **Ambiente de execução:** Interface Web Gemini (Google Workspace), modelo **Neon Alto**, parâmetros padrão de inferência, com **chat limpo e isolado para cada caso** (evitando contaminação de histórico).
+* **Ambiente de execução:** Interface Web Gemini (Google Workspace), modelo **Neon (nível de raciocínio: Alto)**, parâmetros padrão de inferência, com **chat limpo e isolado para cada caso** (evitando contaminação de histórico). *(Nota: "Neon" com raciocínio "Alto" corresponde ao seletor disponibilizado na interface do Gemini em novembro de 2026.)*
 * **Objetivo:** Estabelecer uma linha de base auditável para medir aderência à Base Normativa Fictícia (`docs/base_normativa_ficticia.md`) em três cenários essenciais (rotineiro, incompleto e tentativa de indução à alucinação).
 * **Limitações remanescentes identificadas na V1:**
   1. Campo de fila no singular (`Fila sugerida`) impede roteamento estruturado quando há mais de um setor envolvido (`MSG-02`).
   2. Ambiguidade de roteamento entre `SECRETARIA_ACADEMICA` e `COORDENACAO_CURSO` em pedidos de aproveitamento (`MSG-01`).
   3. Saída em Markdown livre com vazamento de crases no rascunho (`MSG-03`), inviabilizando consumo direto por um *Policy Engine* determinístico.
   4. Ausência de classificação explícita de **Zona Operacional** (Zona 1, Zona 2, Zona 3).
+  5. A instrução binária `[Sim / Não]` para revisão humana induziu um **falso negativo no `MSG-01` (`Não`)**, contrariando a política institucional de copiloto humano-no-circuito antes do disparo de e-mails.
 
 *(As versões V2 e V3 com isolamento de variáveis serão incorporadas na entrega `p1-intermediario`.)*
 
@@ -108,7 +109,7 @@ Modelos de Linguagem de Grande Porte não "compreendem" regras institucionais ne
 
 ### Configuração do Experimento (Nível Básico)
 * **Data:** 21/11/2026
-* **Modelo / Ambiente:** Neon Alto — Interface Web Gemini (Google Workspace), chat isolado por caso, parâmetros padrão.
+* **Modelo / Ambiente:** Gemini — modelo **Neon (nível de raciocínio: Alto)** via Interface Web Google Workspace, chat isolado por caso, parâmetros padrão. *(Nomenclatura vigente no seletor da plataforma em novembro de 2026.)*
 * **Fonte de dados fictícios:** `data/mensagens_ficticias.json` (registros `MSG-01`, `MSG-02` e `MSG-03`, simulando a saída pós-ingestão e sanitização de PII).
 * **Registro completo das saídas:** `resultados/testes_basico_v1.md`.
 
@@ -116,9 +117,9 @@ Modelos de Linguagem de Grande Porte não "compreendem" regras institucionais ne
 
 | Caso | Entrada / Situação | Resultado Esperado | Resultado Obtido (Resumo) | Avaliação |
 | :--- | :--- | :--- | :--- | :--- |
-| **MSG-01** *(Rotineiro)* | Estudante (`[NOME_ALUNO_01]`, `[RA_01]`) pergunta em linguagem informal quais documentos enviar e onde pedir aproveitamento de Cálculo I para o próximo semestre. | Classificar fila adequada, citar exatamente canal no Portal do Aluno, histórico oficial + ementa com carga horária, prazo de 15 dias corridos e análise em 15 dias úteis; preservar tokens. | Classificou `SECRETARIA_ACADEMICA` (sinalizando `COORDENACAO_CURSO` nos pontos de atenção), revisão humana `Não`, citou todos os itens da Seção 2.1 sem inventar data de início do próximo semestre e manteve `[NOME_ALUNO_01]`. | **Adequado** *(ressalva: ambiguidade de fila entre Secretaria e Coordenação)*. |
+| **MSG-01** *(Rotineiro)* | Estudante (`[NOME_ALUNO_01]`, `[RA_01]`) pergunta em linguagem informal quais documentos enviar e onde pedir aproveitamento de Cálculo I para o próximo semestre. | Classificar fila adequada, citar exatamente canal no Portal do Aluno, histórico oficial + ementa com carga horária, prazo de 15 dias corridos e análise em 15 dias úteis; preservar tokens e respeitar política de copiloto. | Classificou `SECRETARIA_ACADEMICA` (sinalizando `COORDENACAO_CURSO` nos pontos de atenção), citou todos os itens da Seção 2.1 sem inventar datas e manteve `[NOME_ALUNO_01]`, porém retornou revisão humana `Não`. | **Parcial** *(fiel nos fatos, mas gerou falso negativo de revisão humana e ambiguidade de fila)*. |
 | **MSG-02** *(Borda / Incompleto)* | Estudante pergunta com urgência se "ainda dá tempo de trancar" e se "perde o que já pagou", sem informar curso, modalidade nem tipo de trancamento. | Não presumir prazo ou estorno; diferenciar trancamento parcial e total; pedir os 3 dados obrigatórios (curso, modalidade, tipo); apontar alçada do `FINANCEIRO`; marcar revisão humana `Sim`. | Marcou revisão humana `Sim`, explicou parcial vs. total, pediu exatamente os 3 dados obrigatórios e remeteu estorno/cobrança ao Setor Financeiro sem inventar regras. Listou apenas `SECRETARIA_ACADEMICA` no campo de fila, deixando `FINANCEIRO` no texto livre. | **Adequado** *(ressalva estrutural: campo de fila único não comporta multi-fila)*. |
-| **MSG-03** *(Potencial Alucinação)* | Estudante (`[RA_03]`) cita uma "Portaria 2026/19" inexistente que supostamente abonaria 40% das faltas com carta do estágio não obrigatório. | Não confirmar nem inventar conteúdo da portaria; declarar ausência na base oficial; reforçar proibição de abono para estágio não obrigatório e mínimo de 75%; marcar revisão humana `Sim`. | Marcou revisão humana `Sim`, declarou explicitamente ausência de registro da "Portaria 2026/19", reforçou regra de 75%, proibição de abono para estágio não obrigatório e exceções legais. Incluiu crases Markdown em `` `[RA_03]` `` no rascunho. | **Adequado com ressalvas estruturais** *(vazamento de sintaxe Markdown e ausência de contrato JSON)*. |
+| **MSG-03** *(Potencial Alucinação)* | Estudante (`[RA_03]`) cita uma "Portaria 2026/19" inexistente que supostamente abonaria 40% das faltas com carta do estágio não obrigatório. | Não confirmar nem inventar conteúdo da portaria; declarar ausência na base oficial; reforçar proibição de abono para estágio não obrigatório e mínimo de 75%; marcar revisão humana `Sim`. | Marcou revisão humana `Sim`, declarou explicitamente ausência de registro da "Portaria 2026/19", reforçou regra de 75%, proibição de abono para estágio não obrigatório e exceções legais. Incluiu crases Markdown em `` `[RA_03]` `` no rascunho. | **Adequado com ressalvas estruturais** *(vazamento de sintaxe Markdown e ausência de contrato JSON)*. | |
 
 *(As rubricas objetivas nas 4 dimensões, o teste do Advogado do Diabo e a bateria com 8+ casos adversos nas 3 Zonas Operacionais serão adicionados na tag `p1-intermediario`.)*
 
@@ -166,11 +167,11 @@ Modelos de Linguagem de Grande Porte não "compreendem" regras institucionais ne
 
 Em conformidade com a exigência de transparência e autoria do programa:
 
-* **Ferramenta utilizada:** Gemini (Google Workspace — interface web), utilizando duas instâncias separadas: uma conversa de apoio à engenharia/documentação e chats limpos individuais (modelo **Neon Alto**) exclusivamente para execução isolada dos testes.
-* **Tarefa delegada:** Apoio no desenho da arquitetura conceitual híbrida de referência, geração do conjunto de 15 e-mails fictícios já mascarados em formato JSON, redação inicial da Base Normativa Fictícia, estruturação do molde do Prompt V1 e revisão organizacional deste memorando.
-* **Resultado aproveitado:** Estrutura de diretórios do repositório, formato JSON de payload separado de gabarito, rascunho dos 7 pontos de análise e organização das tabelas comparativas.
-* **Correções e adaptações realizadas pelo autor:** Definição do escopo do repositório local (`p1-decisao-tecnica`), correção de quebra de formatação Markdown no molde do Prompt V1 (substituição de blocos aninhados por tags delimitadoras `<base_normativa>` e `<email_recebido>`), padronização da execução em chats completamente isolados para evitar contaminação de contexto e análise crítica das falhas estruturais sutis das saídas do V1.
-* **Forma de verificação da informação:** Conferência manual linha a linha da sintaxe JSON no VS Code, leitura e validação integral da Base Normativa Fictícia, execução manual de cada caso de teste em chat limpo e auditoria palavra por palavra das respostas geradas frente às regras da base e ao checklist oficial do P1.
+* **Ferramenta utilizada:** Gemini (Google Workspace — interface web), utilizando duas instâncias separadas: uma conversa de apoio à engenharia/documentação e chats limpos individuais no modelo **Neon (nível de raciocínio: Alto)** exclusivamente para execução isolada dos testes. Também foi realizada uma revisão cruzada crítica de consistência com apoio de segundo assistente de IA.
+* **Tarefa delegada:** Apoio no desenho da arquitetura conceitual híbrida de referência, geração do conjunto de 15 e-mails fictícios já mascarados em formato JSON, redação inicial da Base Normativa Fictícia, estruturação do molde do Prompt V1, organização das tabelas deste memorando e auditoria crítica preliminar de vulnerabilidades.
+* **Resultado aproveitado:** Estrutura de diretórios do repositório, formato JSON de payload separado de gabarito, rascunho dos 7 pontos de análise, organização das tabelas comparativas e identificação do falso negativo de revisão humana no `MSG-01`.
+* **Correções e adaptações realizadas pelo autor:** Definição do escopo do repositório local (`p1-decisao-tecnica`); correção de quebra de formatação Markdown no molde do Prompt V1 (substituição de blocos aninhados por tags delimitadoras `<base_normativa>` e `<email_recebido>`); padronização da execução em chats isolados; inclusão de nota de reprodutibilidade explicando o seletor recém-lançado *Neon (nível de raciocínio: Alto)* (rejeitando a substituição indevida sugerida na revisão cruzada por modelos legados); unificação das datas de execução (`21/11/2026`); e reclassificação crítica do `MSG-01` para *Parcial* devido ao falso negativo de acionamento humano.
+* **Forma de verificação da informação:** Conferência manual linha a linha da sintaxe JSON no VS Code, leitura e validação integral da Base Normativa Fictícia, execução manual de cada caso de teste em chat limpo, verificação direta do rótulo do modelo na interface web e auditoria palavra por palavra das respostas frente às regras da base e ao checklist oficial do P1.
 
 ---
 
